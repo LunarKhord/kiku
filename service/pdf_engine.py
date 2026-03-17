@@ -56,6 +56,7 @@ async def classifier(pdf_as_bytes: bytes) -> List[Dict]:
     results = []
     doc = pymupdf.open(stream=pdf_as_bytes, filetype="pdf")
     
+    
     for page in doc:
         page_area = abs(page.rect)
 
@@ -86,7 +87,7 @@ async def classifier(pdf_as_bytes: bytes) -> List[Dict]:
                 "page": page.number + 1,
                 "type": "scanned/image-based",
                 "score": 0,
-                "image_coverage": f"{image_ratio:.1%}"
+                
             })  # Scanned/Image-based PDF
 
 
@@ -95,7 +96,7 @@ async def classifier(pdf_as_bytes: bytes) -> List[Dict]:
                 "page": page.number + 1,
                 "type": "scanned/image-based with invisible OCR",
                 "score": 0,
-                "image_coverage": f"{image_ratio:.1%}"
+                
             })  # Scanned/Image-based PDF with invisible OCR text
 
 
@@ -105,18 +106,28 @@ async def classifier(pdf_as_bytes: bytes) -> List[Dict]:
                     "page": page.number + 1,
                     "type": "text-based",
                     "score": 1,
-                    "image_coverage": f"{image_ratio:.1%}"
+                    
                     })  # Text-based PDF
         else:
             results.append({
                 "page": page.number + 1,
                 "type": "scanned/image-based",
                 "score": 0,
-                "image_coverage": f"{image_ratio:.1%}"
+                
             })  # Default to scanned/image-based PDF if no text is found
     doc.close()
-    return results
 
+    # Log the classification results, by checking if 10% of the document is flagged as 0,
+    # it's usually safe to treat the entire document as a scan.
+
+    total_pages = len(results)
+    scanned_count = sum(1 for page in results if page["score"] == 0)
+
+    if (scanned_count / total_pages) > 0.10:
+        logger.info("More than 10% of pages are scanned/image-based. Classifying entire document as scanned/image-based.")
+        return {"type": "scanned/image-based", "score": 0}
+    else:
+        return {"type": "text-based", "score": 1}
 
 
 async def text_extraction(pdf_as_bytes: bytes):
@@ -139,4 +150,13 @@ async def ocr_extraction(pdf_as_bytes: bytes):
     it uses the OCR library Tesseract to extract text from scanned PDFs.
     """
     # Placeholder for OCR extraction logic
+    pass
+
+
+async def ocr_text_extraction(pdf_as_bytes: bytes):
+    """
+    This function is a placeholder for OCR text extraction logic. In a real implementation,
+    it would combine OCR extraction with text extraction to handle PDFs that contain both scanned images and embedded text.
+    """
+    # Placeholder for combined OCR and text extraction logic
     pass
