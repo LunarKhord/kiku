@@ -23,9 +23,11 @@ async def health():
 @app.post("/api/v1/kiku/uploads")
 async def upload_file(files: List[UploadFile] = File(...), step_fun_instance = Depends(get_step_fun), kokoro_instance = Depends(get_kokoro)):
     saved_file_paths = []
+    file_name = None
     # Sanatize the filename to prevent path traversal attacks
     for file in files:
-        print(f"File object {file.headers.get("content-type")}")
+        file_name = file.filename
+        print(f"File name: {file.filename}")
         if file.headers.get("content-type") != "application/pdf":
             return {"message": "Document must be a type PDF."}
         safe_filename = Path(file.filename).name
@@ -37,4 +39,4 @@ async def upload_file(files: List[UploadFile] = File(...), step_fun_instance = D
                 await out_file.write(chunk)
         saved_file_paths.append(str(file_path))
     await file.close()
-    await process_pdf(saved_file_paths, step_fun_instance, kokoro_instance)
+    await process_pdf(saved_file_paths, step_fun_instance, kokoro_instance, file_name)
