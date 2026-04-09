@@ -7,31 +7,13 @@ from pymupdf import Document
 import pytesseract
 from PIL import Image
 import io
-from utils.string_factory import chunk_by_words
+from utils.string_factory import chunk_by_words, clean_text
 from service.edge_tts import generate_speech_from_chunks
 
 
 logging.basicConfig(level=logging.INFO)
 
 logger = logging.getLogger(__name__)
-
-# StepFun model instance
-# step_fun = StepFun()
-# logger.info("Instance was created for", step_fun)
-
-
-class PDFEngine:
-    pass
-
-
-# The need to support the following has arises by ME
-"""
- -- PDF
- -- EPUB
- -- EPUB3
- -- TXT
-
-"""
 
 
 
@@ -52,7 +34,7 @@ async def extract_pdf_metadata(pdf_object: Document, file_name: str) -> Dict | N
 
 
 async def process_pdf(
-    path_to_pdf: List[str], step_fun_instance, kokoro_instance, file_name: str
+    path_to_pdf: List[str], step_fun_instance, file_name: str
 ) -> None:
     for path in path_to_pdf:
         # Utilize 'with' as a context manager to ensure deterministic cleanup
@@ -68,8 +50,9 @@ async def process_pdf(
                     content = await hybrid_text_extraction(pdf_doc)
                     # Generate chapter manifest
                     script = await step_fun_instance.generate_chapters_from_corpus(content, book_meta)
+                   
             
-                    await process_script(script, kokoro_instance)
+                    await process_script(script)
 
                 except Exception as e:
                     logger.error(
@@ -82,31 +65,32 @@ async def process_pdf(
                   
                     # Generate chapter manifest
                     script = await step_fun_instance.generate_chapters_from_corpus(content, book_meta)
-
                    
-                    await process_script(script, kokoro_instance)
+                    await process_script(script)
                 except Exception as e:
                     logger.error(
                         f"An error occured while processing PDF as text only: {e}"
                     )
 
 
-async def process_script(cleaned_content: List[Dict], kokoro_instance):
-    print("full content body:", cleaned_content[0].get("text"))
-    chunk = await chunk_by_words(cleaned_content[0].get("text"))
-    for index, content in enumerate(chunk):
-        print(f"Chunk number {index}")
-        print(f"Content: {content}")
-    await generate_speech_from_chunks(chunk)
+async def process_script(chapter_to_content: List[Dict]):
+    chunks_to_chapter = []
+    for content in chapter_to_content:
+        title = content.get("title").strip("\n")
+        
+        script = await clean_text(content.get("text"))
+        chunk = await chunk_by_words(script)
+
+        chunks_to_chapter.append(
+            {
+                "chapter": title,
+                "chunk": chunk,
+            }
+            )
+    print("extracted chunk to chapter:", chunks_to_chapter[-1])
+    await generate_speech_from_chunks(chunks_to_chapter)
     logger.info("Generating the audio for the passed in chapter.")
-    # try:
-    #     await kokoro_instance.generate_speech(
-    #         cleaned_content[0].get("start"), "/home/lunarkhord/Desktop/kiku/output"
-    #     )
-
-    # except Exception as e:
-    #     logger.error(f"An error ocured, while trying to convert text into audio: {e}")
-
+   
 
 
 

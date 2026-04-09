@@ -9,12 +9,11 @@ from dotenv import load_dotenv
 
 
 load_dotenv()
-GOOGLE_GEMENI_KEY = os.getenv("GOOGLE_GEMENI")
 
 
 class StepFun:
     def __init__(self):
-        self.model = "qwen/qwen3.6-plus:free"
+        self.model = "nvidia/nemotron-3-nano-30b-a3b:free"
         self.client = OpenAI(
             base_url="https://openrouter.ai/api/v1",
             api_key=os.getenv("OPENROUTER_API_KEY"),
@@ -125,6 +124,7 @@ class StepFun:
 
         try:
             manifest = json.loads(clean_json)
+            
             chapter_to_content = await self.extract_content(full_corpus, manifest)
             return chapter_to_content
 
@@ -133,7 +133,7 @@ class StepFun:
             print(f"Raw response: {response}")
             return None
 
-    async def extract_content(self, full_corpus, manifest):
+    async def extract_content(self, full_corpus, manifest) -> List[Dict]:
         book_chunk = []
         # Normalize the corpus for searching (remove extra spaces/newlines)
         # But we keep the original for the actual extraction!
@@ -171,6 +171,6 @@ class StepFun:
                     "text": chapter_text,
                 }
             )
-
+       
         print(f"✅ Successfully separated {len(book_chunk)} chapters.")
         return book_chunk

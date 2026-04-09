@@ -21,7 +21,7 @@ async def health():
 
 
 @app.post("/api/v1/kiku/uploads")
-async def upload_file(files: List[UploadFile] = File(...), step_fun_instance = Depends(get_step_fun), kokoro_instance = Depends(get_kokoro)):
+async def upload_file(files: List[UploadFile] = File(...), step_fun_instance = Depends(get_step_fun)):
     saved_file_paths = []
     file_name = None
     # Sanatize the filename to prevent path traversal attacks
@@ -39,4 +39,4 @@ async def upload_file(files: List[UploadFile] = File(...), step_fun_instance = D
                 await out_file.write(chunk)
         saved_file_paths.append(str(file_path))
     await file.close()
-    await process_pdf(saved_file_paths, step_fun_instance, kokoro_instance, file_name)
+    await process_pdf(saved_file_paths, step_fun_instance, file_name)

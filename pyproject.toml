@@ -6,12 +6,18 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "aiofiles>=25.1.0",
+    "cartesia[websockets]>=3.0.2",
     "celery>=5.6.2",
+    "edge-tts>=7.2.8",
     "elevenlabs>=2.40.0",
     "fastapi[standard]>=0.135.1",
     "google-genai>=1.69.0",
+    "kokoro-onnx>=0.5.0",
+    "openai>=2.30.0",
     "pydub>=0.25.1",
     "pymupdf>=1.27.2.2",
+    "pytesseract>=0.3.13",
     "python-dotenv>=1.2.2",
     "python-multipart>=0.0.22",
+    "soundfile>=0.13.1",
 ]

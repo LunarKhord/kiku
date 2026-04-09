@@ -19,11 +19,11 @@ async def lifespan(app: FastAPI):
     step_fun_instance = StepFun()
     logger.info("Step Fun address:", step_fun_instance)
 
-    logger.info("Initializing an instance of Kokoro TTS model")
-    kokoro_instance = VoiceSynthesizer(model_path= "/home/lunarkhord/Desktop/kiku/models/kokoro-v1.0.int8.onnx", voices_path="/home/lunarkhord/Desktop/kiku/models/voices-v1.0.bin")
+    #logger.info("Initializing an instance of Kokoro TTS model")
+    #kokoro_instance = VoiceSynthesizer(model_path= "/home/lunarkhord/Desktop/kiku/models/kokoro-v1.0.int8.onnx", voices_path="/home/lunarkhord/Desktop/kiku/models/voices-v1.0.bin")
 
 
-    yield {"stepfun": step_fun_instance, "kokoro": kokoro_instance}
+    yield {"stepfun": step_fun_instance}
 
 
 

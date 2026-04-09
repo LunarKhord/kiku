@@ -1,6 +1,6 @@
 import re
 
-async def chunk_by_words(text: str, max_words: int = 350) -> list[str]:
+async def chunk_by_words(text: str, max_words: int = 5000) -> list[str]:
     """
     Splits text into chunks by word count while preserving sentence boundaries.
     Prevents mid-sentence cuts that cause robotic TTS seams.
@@ -21,7 +21,7 @@ async def chunk_by_words(text: str, max_words: int = 350) -> list[str]:
         sent_words = sent.split()
         sent_count = len(sent_words)
 
-        # 🔪 If a single sentence exceeds the limit, split it intelligently
+        #  If a single sentence exceeds the limit, split it intelligently
         if sent_count > max_words:
             if current_words:
                 chunks.append(' '.join(current_words))
@@ -44,7 +44,7 @@ async def chunk_by_words(text: str, max_words: int = 350) -> list[str]:
                     current_words = part_words
                     current_count = len(part_words)
         else:
-            # 📦 Normal case: add to current chunk or flush
+            # Normal case: add to current chunk or flush
             if current_count + sent_count <= max_words:
                 current_words.extend(sent_words)
                 current_count += sent_count
@@ -58,3 +58,27 @@ async def chunk_by_words(text: str, max_words: int = 350) -> list[str]:
 
     # Filter out noise/tiny fragments
     return [c for c in chunks if len(c.split()) >= 5]
+
+
+
+
+async def clean_text(text: str) -> str:
+    """Removes common PDF extraction artifacts before TTS."""
+
+    # Remove page numbers
+    text = re.sub(r'Page\s+\d+', '', text, flags=re.IGNORECASE)
+    
+    # Fix hyphenated line breaks (con-\nversation → conversation)
+    text = re.sub(r'(\w+)-\n(\w+)', r'\1\2', text)
+    
+    # Normalize whitespace & punctuation spacing
+    text = re.sub(r'\s+([.,;:!?])\s*', r'\1 ', text)  # "word ," → "word,"
+    text = re.sub(r'\s+', ' ', text)  # Collapse multiple spaces
+    
+    # Remove orphaned symbols/artifacts
+    text = re.sub(r'[※†‡§¶]\s*', '', text)  # Footnote markers
+    
+    # Fix common ligatures
+    text = text.replace('ﬁ', 'fi').replace('ﬂ', 'fl').replace('ﬀ', 'ff')
+    
+    return text.strip()
